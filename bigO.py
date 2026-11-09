@@ -1,28 +1,32 @@
-### Yorum ###
 import streamlit as st
-import pandas as pd
 
 st.set_page_config(page_title="Algoritma Adım Görselleştirici", layout="wide")
 st.title("📊 Zaman Karmaşıklığı: Adım Adım Görselleştirici")
 
 HAM_LISTE = [12, 5, 7, 14, 1, 9, 6, 11, 8, 15, 2, 3, 4, 10, 13]
 
-algoritma = st.sidebar.selectbox(
-    "Görselleştirilecek Algoritmayı Seçin:",
-    [
-        "O(n) - Doğrusal Arama (Linear Search)",
-        "O(n²) - Seçmeli Sıralama (Selection Sort)",
-        "O(n²) - Kabarcık Sıralaması (Bubble Sort)",
-    ],
-)
+ALGORITMALAR = [
+    "O(n) - Doğrusal Arama (Linear Search)",
+    "O(log n) - İkili Arama (Binary Search - Sıralı Dizi)",
+    "O(n²) - Seçmeli Sıralama (Selection Sort)",
+    "O(n²) - Kabarcık Sıralaması (Bubble Sort)",
+]
+
+secili_algo = st.sidebar.selectbox("Görselleştirilecek Algoritmayı Seçin:", ALGORITMALAR)
+algo_indeks = ALGORITMALAR.index(secili_algo)
+
+# Arama algoritmaları seçiliyse hedef sayı kaydırıcısını göster
+hedef_sayi = 10
+if algo_indeks in [0, 1]:
+    hedef_sayi = st.sidebar.slider("Aranacak Hedef Sayı:", 1, 15, 10)
 
 
-def adimlari_uret(secim, baslangic_listesi):
+def adimlari_uret(indeks, baslangic_listesi, hedef):
     liste = baslangic_listesi.copy()
     adimlar = []
 
-    if "Doğrusal Arama" in secim:
-        hedef = st.sidebar.slider("Aranacak Hedef Sayı:", 1, 15, 10)
+    # 0: O(n) Doğrusal Arama
+    if indeks == 0:
         for i, val in enumerate(liste):
             durum = "✅ BULUNDU!" if val == hedef else "❌ Eşleşmedi, sıradakine geç"
             adimlar.append({
@@ -33,7 +37,40 @@ def adimlari_uret(secim, baslangic_listesi):
             if val == hedef:
                 break
 
-    elif "Seçmeli Sıralama" in secim:
+    # 1: O(log n) İkili Arama
+    elif indeks == 1:
+        liste.sort()
+        sol = 0
+        sag = len(liste) - 1
+        adim_no = 0
+        while sol <= sag:
+            adim_no += 1
+            orta = (sol + sag) // 2
+            orta_deger = liste[orta]
+            if orta_deger == hedef:
+                adimlar.append({
+                    "dizi": liste.copy(),
+                    "aktif": [orta],
+                    "aciklama": f"Adım {adim_no}: Aralık [{sol}..{sag}] | Orta İndeks: {orta} (Değer: {orta_deger}) -> ✅ BULUNDU!",
+                })
+                break
+            elif orta_deger < hedef:
+                adimlar.append({
+                    "dizi": liste.copy(),
+                    "aktif": [orta],
+                    "aciklama": f"Adım {adim_no}: Aralık [{sol}..{sag}] | Orta Değer ({orta_deger}) < Hedef ({hedef}) -> Sağ yarıya geç",
+                })
+                sol = orta + 1
+            else:
+                adimlar.append({
+                    "dizi": liste.copy(),
+                    "aktif": [orta],
+                    "aciklama": f"Adım {adim_no}: Aralık [{sol}..{sag}] | Orta Değer ({orta_deger}) > Hedef ({hedef}) -> Sol yarıya geç",
+                })
+                sag = orta - 1
+
+    # 2: O(n²) Seçmeli Sıralama
+    elif indeks == 2:
         n = len(liste)
         adim_no = 0
         for i in range(n):
@@ -54,7 +91,8 @@ def adimlari_uret(secim, baslangic_listesi):
                 "aciklama": f"🔄 TAKAS: {liste[i]} sayısı {i}. indekse yerleştirildi.",
             })
 
-    elif "Kabarcık Sıralaması" in secim:
+    # 3: O(n²) Kabarcık Sıralaması
+    elif indeks == 3:
         n = len(liste)
         adim_no = 0
         for i in range(n - 1):
@@ -73,14 +111,22 @@ def adimlari_uret(secim, baslangic_listesi):
     return adimlar
 
 
-adim_listesi = adimlari_uret(algoritma, HAM_LISTE)
+adim_listesi = adimlari_uret(algo_indeks, HAM_LISTE, hedef_sayi)
 toplam_adim = len(adim_listesi)
 
 st.markdown(f"**Başlangıç Listesi:** `{HAM_LISTE}` | **Toplam Adım Sayısı:** `{toplam_adim}`")
 
-secili_adim = st.slider("Adım İlerlemesi (İleri / Geri Sarın):", 1, toplam_adim, 1)
-mevcut = adim_listesi[secili_adim - 1]
+# HATA ÖNLEYİCİ KONTROL: Slider yalnızca toplam adım 1'den büyükse oluşturulur
+if toplam_adim > 1:
+    secili_adim = st.slider("Adım İlerlemesi (İleri / Geri Sarın):", 1, toplam_adim, 1)
+elif toplam_adim == 1:
+    secili_adim = 1
+    st.success("İşlem tek adımda (O(1) en iyi senaryo) tamamlandığı için kaydırıcıya gerek kalmadı.")
+else:
+    st.error("Adım listesi oluşturulamadı.")
+    st.stop()
 
+mevcut = adim_listesi[secili_adim - 1]
 st.info(mevcut["aciklama"])
 
 # Sayıları ve aktif işlem gören elemanları HTML/CSS kutuları olarak yan yana çiz
@@ -98,4 +144,4 @@ for idx, (col, deger) in enumerate(zip(cols, mevcut["dizi"])):
         </div>
         """,
         unsafe_allow_html=True,
-    ) 
+    )
