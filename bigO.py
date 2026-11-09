@@ -1,3 +1,4 @@
+### Yorum ###
 import streamlit as st
 import pandas as pd
 
@@ -97,4 +98,4 @@ for idx, (col, deger) in enumerate(zip(cols, mevcut["dizi"])):
         </div>
         """,
         unsafe_allow_html=True,
-    )
+    ) 
