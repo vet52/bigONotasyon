@@ -39,6 +39,7 @@ ALGORITMALAR = [
     "O(n²) - Kuadratik Çift Arama (2-Sum: A + B = Hedef)",
     "O(n²) - Kuadratik Kabarcık Sıralaması (Best / Average / Worst Case)",
     "O(n³) - Kübik Üçlü Arama (3-Sum: A + B + C = Hedef)",
+    "O(n^c) - Polinom Zaman (Genelleştirilmiş c-Derinlikli İç İçe Döngü / c-Sum)",
     "O(2^n) - Üstel Zaman (Tüm Alt Kümeleri Üretme - Power Set)",
     "O(n!) - Faktöriyel Zaman (Tüm Permütasyonları Sıralama)",
 ]
@@ -56,8 +57,9 @@ hedef_sayi = AKTIF_LISTE[len(AKTIF_LISTE) // 2]
 hedef_toplam = sum(AKTIF_LISTE[:3])
 asal_sayi = 97
 alt_boyut = 4
+polinom_c = 4
 
-# O(n) Doğrusal Arama Senaryoları
+# 0: O(n) Doğrusal Arama Senaryoları
 if algo_indeks == 0:
     senaryo_modu = st.sidebar.radio(
         "Senaryo Seçin:",
@@ -73,11 +75,11 @@ if algo_indeks == 0:
     elif "Ortalama" in senaryo_modu:
         hedef_sayi = AKTIF_LISTE[len(AKTIF_LISTE) // 2]
     elif "En Kötü" in senaryo_modu:
-        hedef_sayi = -99  # Listede olmayan sayı
+        hedef_sayi = -99
     else:
         hedef_sayi = st.sidebar.selectbox("Aranacak Sayı:", AKTIF_LISTE + [-99])
 
-# O(log n) İkili Arama Senaryoları
+# 1: O(log n) İkili Arama Senaryoları
 elif algo_indeks == 1:
     sirali_gecici = sorted(AKTIF_LISTE)
     orta_idx = (len(sirali_gecici) - 1) // 2
@@ -96,7 +98,7 @@ elif algo_indeks == 1:
     else:
         hedef_sayi = -99
 
-# O(√n) Asal Sayı Kontrolü
+# 2: O(√n) Asal Sayı Kontrolü
 elif algo_indeks == 2:
     senaryo_modu = st.sidebar.radio(
         "Senaryo Seçin:",
@@ -116,13 +118,13 @@ elif algo_indeks == 2:
     else:
         asal_sayi = st.sidebar.number_input("Test Edilecek Sayı:", 2, 10000, 97)
 
-# O(n²) Çift Arama
+# 3: O(n²) Çift Arama
 elif algo_indeks == 3:
     min_t = min(AKTIF_LISTE) * 2
     max_t = max(AKTIF_LISTE) * 2
     hedef_toplam = st.sidebar.slider("Hedef İkili Toplam (A + B):", min_t, max_t, AKTIF_LISTE[0] + AKTIF_LISTE[-1])
 
-# O(n²) Bubble Sort Senaryoları
+# 4: O(n²) Bubble Sort Senaryoları
 elif algo_indeks == 4:
     senaryo_modu = st.sidebar.radio(
         "Dizi Başlangıç Durumu (Senaryo):",
@@ -137,20 +139,47 @@ elif algo_indeks == 4:
     elif "En Kötü" in senaryo_modu:
         AKTIF_LISTE = sorted(AKTIF_LISTE, reverse=True)
 
-# O(n³) Kübik Üçlü Arama (3-Sum)
+# 5: O(n³) Kübik Üçlü Arama (3-Sum)
 elif algo_indeks == 5:
     alt_boyut = st.sidebar.slider("Kübik Tarama İçin Eleman Sınırı (N):", 4, min(10, len(AKTIF_LISTE)), min(7, len(AKTIF_LISTE)))
     AKTIF_LISTE = AKTIF_LISTE[:alt_boyut]
     varsayilan_3 = AKTIF_LISTE[-3] + AKTIF_LISTE[-2] + AKTIF_LISTE[-1]
     hedef_toplam = st.sidebar.number_input("Hedef Üçlü Toplam (A + B + C):", value=varsayilan_3)
 
-# O(2^n) Üstel Zaman
+# 6: O(n^c) Polinom Zaman (Dinamik c Dereceli İç İçe Kombinasyon Taraması)
 elif algo_indeks == 6:
+    polinom_c = st.sidebar.slider("Polinom Derecesi / Döngü Sayısı (c):", min_value=2, max_value=5, value=4, step=1)
+    max_izin = 9 if polinom_c >= 4 else 12
+    alt_boyut = st.sidebar.slider(
+        "Polinom Tarama İçin Eleman Sınırı (N):",
+        min_value=polinom_c + 1,
+        max_value=min(max_izin, len(AKTIF_LISTE)),
+        value=min(polinom_c + 3, len(AKTIF_LISTE))
+    )
+    AKTIF_LISTE = AKTIF_LISTE[:alt_boyut]
+    senaryo_modu = st.sidebar.radio(
+        "Senaryo Seçin:",
+        [
+            f"En İyi Durum (Best Case - O(1)): İlk {polinom_c} Elemanın Toplamı",
+            f"Ortalama Durum (Average Case): Rastgele Ara {polinom_c}'li Toplam",
+            f"En Kötü Durum (Worst Case - Tam O(n^{polinom_c})): Son {polinom_c} Eleman / Yok",
+        ]
+    )
+    if "En İyi" in senaryo_modu:
+        hedef_toplam = sum(AKTIF_LISTE[:polinom_c])
+    elif "Ortalama" in senaryo_modu:
+        orta_bas = max(0, (len(AKTIF_LISTE) - polinom_c) // 2)
+        hedef_toplam = sum(AKTIF_LISTE[orta_bas : orta_bas + polinom_c])
+    else:
+        hedef_toplam = -999  # Tüm kombinasyonları taramaya zorlar
+
+# 7: O(2^n) Üstel Zaman
+elif algo_indeks == 7:
     alt_boyut = st.sidebar.slider("Alt Kümesi Üretilecek Eleman Sayısı (N):", 3, min(7, len(AKTIF_LISTE)), 4)
     AKTIF_LISTE = AKTIF_LISTE[:alt_boyut]
 
-# O(n!) Faktöriyel Zaman
-elif algo_indeks == 7:
+# 8: O(n!) Faktöriyel Zaman
+elif algo_indeks == 8:
     alt_boyut = st.sidebar.slider("Permütasyonu Üretilecek Eleman Sayısı (N):", 3, min(5, len(AKTIF_LISTE)), 4)
     AKTIF_LISTE = AKTIF_LISTE[:alt_boyut]
 
@@ -158,7 +187,7 @@ elif algo_indeks == 7:
 # =====================================================================
 # ADIM ÜRETİCİ FONKSİYON
 # =====================================================================
-def adimlari_uret(indeks, baslangic_listesi, h_sayi, h_toplam, n_asal):
+def adimlari_uret(indeks, baslangic_listesi, h_sayi, h_toplam, n_asal, c_derece, senaryo):
     liste = baslangic_listesi.copy()
     n = len(liste)
     adimlar = []
@@ -260,7 +289,7 @@ def adimlari_uret(indeks, baslangic_listesi, h_sayi, h_toplam, n_asal):
                     "aciklama": f"Adım {adim_no}: Dış(i={i}) [{liste[i]}] + İç(j={j}) [{liste[j]}] = {toplam} (Hedef: {h_toplam}) -> {'✅ EŞLEŞTİ!' if bulundu else '❌ Eşleşmedi'}"
                 })
 
-    # 4: O(n²) Kabarcık Sıralaması (Optimize Edilmiş - Best Case O(n) Destekli)
+    # 4: O(n²) Kabarcık Sıralaması
     elif indeks == 4:
         adim_no = 0
         for i in range(n - 1):
@@ -285,7 +314,7 @@ def adimlari_uret(indeks, baslangic_listesi, h_sayi, h_toplam, n_asal):
                 adimlar[-1]["aciklama"] += " | ✅ Bu turda hiç takas olmadı! Dizi sıralı olduğu için algoritma erken durdu (Best Case O(n))."
                 break
 
-    # 5: O(n³) Kübik Üçlü Arama (3-Sum: İç İçe 3 Döngü)
+    # 5: O(n³) Kübik Üçlü Arama (3-Sum)
     elif indeks == 5:
         adim_no = 0
         for i in range(n):
@@ -297,9 +326,9 @@ def adimlari_uret(indeks, baslangic_listesi, h_sayi, h_toplam, n_asal):
                     adimlar.append({
                         "dizi": liste.copy(),
                         "etiketler": [f"[{x}]" for x in range(n)],
-                        "dis_dongu": [i],     # Turuncu: 1. Döngü (i)
-                        "orta_dongu": [j],    # Mor: 2. Döngü (j)
-                        "aktif": [k],         # Kırmızı: 3. Döngü (k)
+                        "dis_dongu": [i],
+                        "orta_dongu": [j],
+                        "aktif": [k],
                         "bulundu": [i, j, k] if bulundu else [],
                         "aciklama": (
                             f"Adım {adim_no} (O(n³)): i={i} ({liste[i]}) + j={j} ({liste[j]}) + k={k} ({liste[k]}) = {toplam} "
@@ -307,8 +336,40 @@ def adimlari_uret(indeks, baslangic_listesi, h_sayi, h_toplam, n_asal):
                         )
                     })
 
-    # 6: O(2^n) Üstel Zaman (Tüm Alt Kümeleri / Power Set Üretme)
+    # 6: O(n^c) Polinom Zaman (Genelleştirilmiş c-Derinlikli İç İçe Döngü)
     elif indeks == 6:
+        adim_no = 0
+        erken_cik = ("En Kötü" not in senaryo)
+        for IndeksGrubu in itertools.combinations(range(n), c_derece):
+            adim_no += 1
+            secilen_degerler = [liste[idx] for idx in IndeksGrubu]
+            toplam = sum(secilen_degerler)
+            bulundu = (toplam == h_toplam)
+            ifade_str = " + ".join(f"{liste[idx]}" for idx in IndeksGrubu)
+
+            # İlk indeks dış döngü (Turuncu), ara indeksler orta döngüler (Mor), son indeks en iç döngü (Kırmızı)
+            dis_idx = [IndeksGrubu[0]]
+            orta_idx = list(IndeksGrubu[1:-1])
+            ic_idx = [IndeksGrubu[-1]]
+
+            adimlar.append({
+                "dizi": liste.copy(),
+                "etiketler": [f"[{x}]" for x in range(n)],
+                "dis_dongu": dis_idx,
+                "orta_dongu": orta_idx,
+                "aktif": ic_idx,
+                "bulundu": list(IndeksGrubu) if bulundu else [],
+                "aciklama": (
+                    f"Adım {adim_no} (O(n^{c_derece})): İndeksler {list(IndeksGrubu)} -> "
+                    f"({ifade_str}) = {toplam} "
+                    f"{'-> ✅ HEDEF BULUNDU!' if bulundu else f'(Hedef: {h_toplam}) -> ❌ Eşleşmedi'}"
+                )
+            })
+            if bulundu and erken_cik:
+                break
+
+    # 7: O(2^n) Üstel Zaman (Power Set)
+    elif indeks == 7:
         toplam_alt_kume = 2 ** n
         for maske in range(toplam_alt_kume):
             secilen_indeksler = [bit for bit in range(n) if (maske & (1 << bit))]
@@ -326,8 +387,8 @@ def adimlari_uret(indeks, baslangic_listesi, h_sayi, h_toplam, n_asal):
                 )
             })
 
-    # 7: O(n!) Faktöriyel Zaman (Tüm Permütasyonları Üretme)
-    elif indeks == 7:
+    # 8: O(n!) Faktöriyel Zaman (Permütasyon)
+    elif indeks == 8:
         tum_permutasyonlar = list(itertools.permutations(liste))
         toplam_perm = len(tum_permutasyonlar)
         for idx, perm in enumerate(tum_permutasyonlar):
@@ -349,7 +410,9 @@ def adimlari_uret(indeks, baslangic_listesi, h_sayi, h_toplam, n_asal):
 
 
 # Adımları üret
-adim_listesi = adimlari_uret(algo_indeks, AKTIF_LISTE, hedef_sayi, hedef_toplam, asal_sayi)
+adim_listesi = adimlari_uret(
+    algo_indeks, AKTIF_LISTE, hedef_sayi, hedef_toplam, asal_sayi, polinom_c, senaryo_modu
+)
 toplam_adim = len(adim_listesi)
 n_mevcut = len(AKTIF_LISTE)
 
@@ -360,7 +423,6 @@ col1, col2, col3, col4 = st.columns(4)
 col1.metric("Veri Boyutu (N)", f"{n_mevcut} Eleman" if algo_indeks != 2 else f"N = {asal_sayi}")
 col2.metric("Gerçekleşen İşlem Sayısı", f"{toplam_adim} Adım")
 
-# O(n) ile kıyaslama metriği
 if algo_indeks == 1:
     col3.metric("O(n) Olsaydı (Worst Case)", f"{n_mevcut} Adım", delta=f"{toplam_adim - n_mevcut} Adım Tasarruf", delta_color="inverse")
 elif algo_indeks == 2:
@@ -370,13 +432,21 @@ elif algo_indeks in [3, 4]:
 elif algo_indeks == 5:
     col3.metric("Kübik Çarpan (N³)", f"{n_mevcut ** 3} Teorik Tavan")
 elif algo_indeks == 6:
-    col3.metric("N=15 Olsaydı (2^15)", "32.768 Adım!")
+    col3.metric(f"Polinom Tavanı (N^{polinom_c})", f"{n_mevcut ** polinom_c:,} (Kombinasyon: {math.comb(n_mevcut, polinom_c)})")
 elif algo_indeks == 7:
+    col3.metric("N=15 Olsaydı (2^15)", "32.768 Adım!")
+elif algo_indeks == 8:
     col3.metric("N=15 Olsaydı (15!)", "1.3 Trilyon Adım!")
 else:
     col3.metric("Teorik Tavan (Worst Case)", f"{n_mevcut} Adım")
 
 col4.metric("Aktif Senaryo", senaryo_modu.split("(")[0].strip())
+
+if algo_indeks == 6:
+    st.info(
+        f"📘 **O(n^c) Polinom Zaman Karmaşıklığı Nedir?** İç içe **{polinom_c} adet döngü** (`c = {polinom_c}`) çalıştırdığımızda karmaşıklık **O(n^{polinom_c})** olur. "
+        f"Polinom zamanlı algoritmalar (P Sınıfı), üstel `O(2^n)` ve faktöriyel `O(n!)` algoritmalara göre bilgisayar bilimlerinde **'çözülebilir (tractable)'** kabul edilir; ancak `c` büyüdükçe (örneğin c=4 veya c=5) veri boyutu biraz arttığında işlem sayısı yine hızla katlanır."
+    )
 
 st.divider()
 
@@ -392,7 +462,6 @@ else:
     st.error("Adım üretilemedi.")
     st.stop()
 
-# İlerleme Çubuğu (Progress Bar)
 st.progress(secili_adim / toplam_adim, text=f"Algoritma İlerlemesi: Adım {secili_adim} / {toplam_adim} (%{int((secili_adim/toplam_adim)*100)})")
 
 mevcut = adim_listesi[secili_adim - 1]
@@ -400,10 +469,10 @@ st.info(f"**Anlık İşlem Detayı:** {mevcut['aciklama']}")
 
 # Renk Rehberi (Lejand)
 st.caption(
-    "🟧 **Turuncu:** 1. Dış Döngü (`i`) / Aktif Arama Aralığı | "
-    "🟪 **Mor:** 2. Orta Döngü (`j` - Kübik) | "
-    "🟥 **Kırmızı:** Aktif Kontrol Edilen Eleman (`k`) | "
-    "🟩 **Yeşil:** Hedef Bulundu / Seçilen Alt Küme / Sıralandı | "
+    "🟧 **Turuncu (`●`):** 1. Dış Döngü | "
+    "🟪 **Mor (`◈`):** Ara Döngüler (`2..c-1` derinlik) | "
+    "🟥 **Kırmızı (`▼`):** En İç Döngü (`c.` derinlik) | "
+    "🟩 **Yeşil (`✓`):** Hedef Bulundu / Seçilen Küme | "
     "🟦 **Mavi:** Bekleyen Elemanlar"
 )
 
@@ -419,13 +488,13 @@ for idx, (col, deger) in enumerate(zip(cols, gosterilen_dizi)):
         renk = "#10b981"  # Yeşil
         durum_ikon = "✓"
     elif idx in mevcut.get("aktif", []):
-        renk = "#ef4444"  # Kırmızı
+        renk = "#ef4444"  # Kırmızı (En iç döngü)
         durum_ikon = "▼"
     elif idx in mevcut.get("orta_dongu", []):
-        renk = "#8b5cf6"  # Mor (Kübik 2. döngü)
+        renk = "#8b5cf6"  # Mor (Ara döngüler)
         durum_ikon = "◈"
     elif idx in mevcut.get("dis_dongu", []):
-        renk = "#f59e0b"  # Turuncu (1. Dış döngü)
+        renk = "#f59e0b"  # Turuncu (En dış döngü)
         durum_ikon = "●"
     else:
         renk = "#3b82f6"  # Mavi
@@ -450,13 +519,15 @@ for idx, (col, deger) in enumerate(zip(cols, gosterilen_dizi)):
 # =====================================================================
 with st.expander("📈 Mevcut Veri Boyutu (N) İçin Tüm Karmaşıklık Sınıflarının Kıyaslama Tablosu", expanded=True):
     n_hesap = n_mevcut
+    c_aktif = polinom_c if algo_indeks == 6 else 4
     karsilastirma_df = pd.DataFrame([
         {"Sınıf": "O(1) - Sabit", "En İyi (Best)": 1, "Ortalama (Avg)": 1, "En Kötü (Worst)": 1, "Durum": "🟢 Mükemmel"},
         {"Sınıf": "O(log n) - Logaritmik", "En İyi (Best)": 1, "Ortalama (Avg)": max(1, int(math.log2(n_hesap))), "En Kötü (Worst)": max(1, math.ceil(math.log2(n_hesap))), "Durum": "🟢 Çok Hızlı"},
         {"Sınıf": "O(√n) - Karekök", "En İyi (Best)": 1, "Ortalama (Avg)": max(1, int(math.isqrt(n_hesap)) // 2), "En Kötü (Worst)": max(1, int(math.isqrt(n_hesap))), "Durum": "🟢 Hızlı"},
         {"Sınıf": "O(n) - Doğrusal", "En İyi (Best)": 1, "Ortalama (Avg)": n_hesap // 2, "En Kötü (Worst)": n_hesap, "Durum": "🟡 İyi / Kabul Edilebilir"},
-        {"Sınıf": "O(n²) - Kuadratik", "En İyi (Best)": n_hesap, "Ortalama (Avg)": (n_hesap ** 2) // 2, "En Kötü (Worst)": n_hesap ** 2, "Durum": "🟠 Yavaş (Büyük veride darboğaz)"},
-        {"Sınıf": "O(n³) - Kübik", "En İyi (Best)": (n_hesap*(n_hesap-1)*(n_hesap-2))//6, "Ortalama (Avg)": (n_hesap ** 3) // 4, "En Kötü (Worst)": n_hesap ** 3, "Durum": "🔴 Çok Yavaş"},
+        {"Sınıf": "O(n²) - Kuadratik (c=2)", "En İyi (Best)": n_hesap, "Ortalama (Avg)": (n_hesap ** 2) // 2, "En Kötü (Worst)": n_hesap ** 2, "Durum": "🟠 Yavaş (Büyük veride darboğaz)"},
+        {"Sınıf": "O(n³) - Kübik (c=3)", "En İyi (Best)": 1, "Ortalama (Avg)": (n_hesap ** 3) // 4, "En Kötü (Worst)": n_hesap ** 3, "Durum": "🔴 Çok Yavaş"},
+        {"Sınıf": f"O(n^c) - Polinom (c={c_aktif})", "En İyi (Best)": 1, "Ortalama (Avg)": (n_hesap ** c_aktif) // 2, "En Kötü (Worst)": n_hesap ** c_aktif, "Durum": "🟣 Ağır Polinom (c büyüdükçe zorlaşır)"},
         {"Sınıf": "O(2^n) - Üstel", "En İyi (Best)": 2 ** n_hesap, "Ortalama (Avg)": 2 ** n_hesap, "En Kötü (Worst)": 2 ** n_hesap, "Durum": "⛔ Tehlikeli (Çökme Riski)"},
         {"Sınıf": "O(n!) - Faktöriyel", "En İyi (Best)": math.factorial(min(n_hesap, 12)), "Ortalama (Avg)": math.factorial(min(n_hesap, 12)), "En Kötü (Worst)": math.factorial(min(n_hesap, 12)), "Durum": "💀 İmkansız (N>12 için kilitlenir)"},
     ])
